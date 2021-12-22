@@ -35,30 +35,12 @@ do
     depth="$(echo $line | cut -d '|' -f2 | xargs)"
     nodes="$(echo $line | cut -d '|' -f3 | xargs)"
 
-    printf "%120s\n" "Testing fen $fen at depth $depth ($name)..."
-    ./perft_check '$fen' '$depth' '$nodes' 2>&1 > output.txt
+    printf "%120s" "Testing fen $fen at depth $depth ($name)..."
+    ./perft_check "$fen" $depth $nodes 2>&1 > output.txt
 
-    if [ $1 = --asan ] && grep "AddressSanitizer:" output.txt 2>&1 > /dev/null
-    then
-        echo "CRASH (see 'crash_log.txt' for more info)"
-        cat output.txt >> crash_log.txt
-        let "CRASH_COUNTER+=1"
-        if [ $CRASH_COUNTER -eq 3 ]
-        then
-            echo "Aborting tests, too much crashes."
-            exit
-        fi
-    elif [ $1 = --ubsan ] && grep "runtime error:" output.txt 2>&1 > /dev/null
-    then
-        echo "CRASH (see 'crash_log.txt' for more info)"
-        cat output.txt >> crash_log.txt
-        let "CRASH_COUNTER+=1"
-        if [ $CRASH_COUNTER -eq 3 ]
-        then
-            echo "Aborting tests, too much crashes."
-            exit
-        fi
-    elif [ $1 = --bench ] && [ $(wc -l output.txt) -ne 3 ]
+    exit_status=$?
+
+    if [ $exit_status -ne 0 ] && [ $exit_status -ne 1 ]
     then
         echo "CRASH (see 'crash_log.txt' for more info)"
         cat output.txt >> crash_log.txt
