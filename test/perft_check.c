@@ -51,7 +51,7 @@ int main(int argc, char **argv) {
     Boardstack stack;
 
     if (board_from_fen(&board, &stack, argv[1])) {
-        printf("FAIL: board_from_fen() error: %s\n", argv[1], board_get_error(&board));
+        printf("FAIL: board_from_fen() error: %s\n", board_get_error(&board));
         return 1;
     }
 

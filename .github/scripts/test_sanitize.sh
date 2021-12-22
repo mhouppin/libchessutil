@@ -35,7 +35,9 @@ do
     depth="$(echo $line | cut -d '|' -f2 | xargs)"
     nodes="$(echo $line | cut -d '|' -f3 | xargs)"
 
-    printf "%120s" "Testing fen $fen at depth $depth ($name)..."
+    if [ $1 = --bench ]; then nodes=bench; fi
+
+    printf "%120s" "Testing fen $fen at depth $depth ($name)... "
     ./perft_check "$fen" $depth $nodes 2>&1 > output.txt
 
     exit_status=$?
