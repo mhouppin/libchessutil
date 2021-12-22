@@ -1,0 +1,50 @@
+name: test_all
+
+on: [push]
+
+jobs:
+  build_libs:
+    name: Build library artifacts
+    runs_on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Build libraries
+        run: ./.github/scripts/build_libs.sh
+
+      - name: Archive library artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: all-libs
+          path: libchessutil_*.a
+
+  test_lib:
+    name: Test libraries
+    runs_on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Download library artifacts
+        uses: actions/download-artifact@v2
+        with:
+          name: all-libs
+
+      - name: Run AddressSanitizer tests
+        run: ./.github/scripts/test_sanitize.sh --asan
+
+      - name: Run UBSanitizer tests
+        run: ./.github/scripts/test_sanitize.sh --ubsan
+
+#      - name: Run functional and pseudo-installation tests
+#        run: ./.github/scripts/test_functional.sh
+
+      - name: Run benchmark tests
+        run: ./.github/scripts/test_sanitize.sh --bench
+
+      - name: Save log artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: crash-logs
+          path: crash_log.txt

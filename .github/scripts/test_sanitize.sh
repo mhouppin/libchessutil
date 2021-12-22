@@ -1,0 +1,77 @@
+#!/bin/bash
+
+# Go to repo root directory if needed
+cd $(dirname $0)
+cd ../..
+
+CRASH_COUNTER=0
+
+# Check which test we are running
+name=""
+
+case $1 in
+    --asan)
+        gcc -g3 -fsanitize=address -o perft_check test/perft_check.c libchessutil_asan.a || exit 1
+        name="ASan "
+        suffix='2>&1 | grep -A50 "AddressSanitizer:"' ;;
+
+    --ubsan)
+        gcc -g3 -fsanitize=undefined -o perft_check test/perft_check.c libchessutil_ubsan.a || exit 1
+        name="UbSan"
+        suffix='2>&1 | grep -A50 "runtime error:"' ;;
+
+    --bench)
+        gcc -O3 -flto -o perft_check test/perft_check.c libchessutil_lto.a || exit 1
+        name="Bench"
+        suffix='' ;;
+
+    *)
+        exit 1 ;;
+esac
+
+while read -r line
+do
+    fen="$(echo $line | cut -d '|' -f1 | xargs)"
+    depth="$(echo $line | cut -d '|' -f2 | xargs)"
+    nodes="$(echo $line | cut -d '|' -f3 | xargs)"
+
+    printf "%120s\n" "Testing fen $fen at depth $depth ($name)..."
+    ./perft_check '$fen' '$depth' '$nodes' 2>&1 > output.txt
+
+    if [ $1 = --asan ] && grep "AddressSanitizer:" output.txt 2>&1 > /dev/null
+    then
+        echo "CRASH (see 'crash_log.txt' for more info)"
+        cat output.txt >> crash_log.txt
+        let "CRASH_COUNTER+=1"
+        if [ $CRASH_COUNTER -eq 3 ]
+        then
+            echo "Aborting tests, too much crashes."
+            exit
+        fi
+    elif [ $1 = --ubsan ] && grep "runtime error:" output.txt 2>&1 > /dev/null
+    then
+        echo "CRASH (see 'crash_log.txt' for more info)"
+        cat output.txt >> crash_log.txt
+        let "CRASH_COUNTER+=1"
+        if [ $CRASH_COUNTER -eq 3 ]
+        then
+            echo "Aborting tests, too much crashes."
+            exit
+        fi
+    elif [ $1 = --bench ] && [ $(wc -l output.txt) -ne 3 ]
+    then
+        echo "CRASH (see 'crash_log.txt' for more info)"
+        cat output.txt >> crash_log.txt
+        let "CRASH_COUNTER+=1"
+        if [ $CRASH_COUNTER -eq 3 ]
+        then
+            echo "Aborting tests, too much crashes."
+            exit
+        fi
+    else
+        cat output.txt | tail -n 1
+    fi
+done < datasets/perft.txt
+
+rm -f perft_check
+rm -f output.txt

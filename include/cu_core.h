@@ -62,6 +62,7 @@
 __CU_BEGIN_DECLS
 
 // Returns the version string of the library.
+// Version will be in the format "x.y.z".
 const char *cu_get_version(void);
 
 // Initializes all stuff related to the library. It should be called before any

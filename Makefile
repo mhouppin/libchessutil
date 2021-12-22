@@ -17,13 +17,13 @@
 EXE := libchessutil.a
 
 SOURCES := \
-	cu_board.c \
-	cu_init.c \
-	cu_movegen.c
+	sources/cu_board.c \
+	sources/cu_init.c \
+	sources/cu_movegen.c
 
 HEADERS := \
-	cu_core.h \
-	cu_movegen.h
+	include/cu_core.h \
+	include/cu_movegen.h
 
 ifeq ($(prefix),)
 prefix = /usr/local
