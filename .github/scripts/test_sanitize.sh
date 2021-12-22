@@ -11,17 +11,17 @@ name=""
 
 case $1 in
     --asan)
-        gcc -g3 -fsanitize=address -o perft_check test/perft_check.c libchessutil_asan.a || exit 1
+        gcc -g3 -fsanitize=address -I include -o perft_check test/perft_check.c libchessutil_asan.a || exit 1
         name="ASan "
         suffix='2>&1 | grep -A50 "AddressSanitizer:"' ;;
 
     --ubsan)
-        gcc -g3 -fsanitize=undefined -o perft_check test/perft_check.c libchessutil_ubsan.a || exit 1
+        gcc -g3 -fsanitize=undefined -I include -o perft_check test/perft_check.c libchessutil_ubsan.a || exit 1
         name="UbSan"
         suffix='2>&1 | grep -A50 "runtime error:"' ;;
 
     --bench)
-        gcc -O3 -flto -o perft_check test/perft_check.c libchessutil_lto.a || exit 1
+        gcc -O3 -flto -I include -o perft_check test/perft_check.c libchessutil_lto.a || exit 1
         name="Bench"
         suffix='' ;;
 
