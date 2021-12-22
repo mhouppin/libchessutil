@@ -5,7 +5,7 @@ on: [push]
 jobs:
   build_libs:
     name: Build library artifacts
-    runs_on: ubuntu-latest
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -21,7 +21,7 @@ jobs:
 
   test_lib:
     name: Test libraries
-    runs_on: ubuntu-latest
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
