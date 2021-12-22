@@ -20,6 +20,7 @@ jobs:
           path: libchessutil_*.a
 
   test_lib:
+    needs: build_libs
     name: Test libraries
     runs-on: ubuntu-latest
     steps:
