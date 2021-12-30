@@ -225,15 +225,36 @@ int board_from_fen(Board *board, Boardstack *stack, const char *fen) {
 
     char *ptr;
     square_t sq = SQ_A8;
+    rank_t curRank = RANK_8;
     size_t nextSection = strcspn(fen, whitespaces);
 
     // Parse the piece section of the FEN.
     for (size_t i = 0; i < nextSection; ++i) {
-        if (fen[i] >= '1' && fen[i] <= '8')
+        if (fen[i] >= '1' && fen[i] <= '8') {
             sq += fen[i] - '0';
 
-        else if (fen[i] == '/')
+            // Check that we don't have more than 8 squares for a given rank.
+            if (square_rank(sq - 1) > curRank) {
+                board_set_error(board, "Too much squares on a single rank in piece section");
+                return -1;
+            }
+        }
+
+        else if (fen[i] == '/') {
+            if (sq != create_square(FILE_A, curRank + 1)) {
+                board_set_error(board, "Not enough squares on a single rank in piece section");
+                return -1;
+            }
+
+            // Check if the number of ranks is correct.
+            if (curRank == RANK_1) {
+                board_set_error(board, "Too much ranks in piece section");
+                return -1;
+            }
+
             sq += 2 * SOUTH;
+            --curRank;
+        }
 
         else if (ptr = strchr(PIECE_INDEXES, fen[i]), ptr != NULL)
             __board_put_piece(board, (piece_t)(ptr - PIECE_INDEXES), sq++);
@@ -242,6 +263,18 @@ int board_from_fen(Board *board, Boardstack *stack, const char *fen) {
             board_set_error(board, "Invalid character in piece section");
             return -1;
         }
+    }
+
+    // Check if the number of ranks is correct.
+    if (curRank != RANK_1) {
+        board_set_error(board, "Missing ranks in piece section");
+        return -1;
+    }
+
+    // Check if the number of squares is correct.
+    if (square_file(sq) != FILE_A) {
+        board_set_error(board, "Not enough squares on a single rank in piece section");
+        return -1;
     }
 
     // Check if there's a correct number of Kings on the board.
