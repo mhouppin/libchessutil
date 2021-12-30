@@ -33,7 +33,7 @@ hashkey_t __cu_zobrist_castling[CASTLING_NB];
 hashkey_t __cu_zobrist_turn;
 
 const char *cu_get_version(void) {
-    return "1.0.0";
+    return "1.0.1";
 }
 
 // Computes the reachable squares from sq given the possible directions and

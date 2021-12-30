@@ -31,29 +31,34 @@
 #define __CU_END_DECLS
 #endif
 
-// Use __builtin_() functions if they are available.
-#ifndef __has_builtin
-#define __has_builtin(x) 0
+// Use __builtin_() functions if we are allowed to.
+// Note: if you find build issues with builtins enabled, add "-DCU_NO_BUILTINS"
+// to the CFLAGS variable.
+#ifdef CU_NO_BUILTINS
+#define CU_USE_BUILTINS 0
+#elif defined(__GNUC__)
+#define CU_USE_BUILTINS 1
+#else
+#define CU_USE_BUILTINS 0
 #endif
 
-#if (UINT_MAX == UINT64_MAX) && __has_builtin(__builtin_popcount)
+#if CU_USE_BUILTINS
+
+#if (UINT_MAX == UINT64_MAX)
 #define __cu_popcount(x) __builtin_popcount(x)
-#elif (ULONG_MAX == UINT64_MAX) && __has_builtin(__builtin_popcountl)
+#define __cu_tzcnt(x)    __builtin_ctz(x)
+#define __cu_lzcnt(x)    __builtin_clz(x)
+#elif (ULONG_MAX == UINT64_MAX)
 #define __cu_popcount(x) __builtin_popcountl(x)
-#elif (ULONG_MAX == UINT32_MAX) && __has_builtin(__builtin_popcountl)
+#define __cu_tzcnt(x)    __builtin_ctzl(x)
+#define __cu_lzcnt(x)    __builtin_clzl(x)
+#elif (ULONG_MAX == UINT32_MAX)
 #define __cu_popcount(x) (__builtin_popcountl((uint32_t)x) + __builtin_popcountl(x >> 32))
+#define __cu_tzcnt(x)    (!(uint32_t)x ? __builtin_ctzl(x >> 32) + 32 : __builtin_ctzl((uint32_t)x))
+#define __cu_lzcnt(x)    (!(x >> 32) ? __builtin_clzl((uint32_t)x) + 32 : __builtin_clzl(x >> 32))
 #endif
 
-#if (UINT_MAX == UINT64_MAX) && __has_builtin(__builtin_ctz)
-#define __cu_tzcnt(x) __builtin_ctz(x)
-#define __cu_lzcnt(x) __builtin_clz(x)
-#elif (ULONG_MAX == UINT64_MAX) && __has_builtin(__builtin_ctzl)
-#define __cu_tzcnt(x) __builtin_ctzl(x)
-#define __cu_lzcnt(x) __builtin_clzl(x)
-#elif (ULONG_MAX == UINT32_MAX) && __has_builtin(__builtin_ctzl)
-#define __cu_tzcnt(x) (!(uint32_t)x ? __builtin_ctzl(x >> 32) + 32 : __builtin_ctzl((uint32_t)x))
-#define __cu_lzcnt(x) (!(x >> 32) ? __builtin_clzl((uint32_t)x) + 32 : __builtin_clzl(x >> 32))
-#endif
+#endif // CU_USE_BUILTINS
 
 #define __CU_INLINE static inline
 
